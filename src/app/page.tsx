@@ -58,7 +58,7 @@ export default function Landing() {
         <h1 className="font-display font-black leading-[0.95] text-[clamp(2.6rem,9vw,6.5rem)]">
           RITMO
           <br />
-          <span className="text-stroke">BINGO</span>
+          <span className="text-outline">BINGO</span>
         </h1>
         <div className="mt-5 flex items-center justify-center gap-1.5">
           {GENRES.map((g) => (

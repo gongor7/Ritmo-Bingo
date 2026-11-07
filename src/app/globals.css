@@ -87,6 +87,12 @@ body::before {
   color: rgba(244, 242, 236, 0.55);
 }
 
+/* Texto hueco (no usar @utility: colisiona con el namespace text- de Tailwind) */
+.text-outline {
+  -webkit-text-stroke: 2px rgba(244, 242, 236, 0.4);
+  color: transparent;
+}
+
 input, button {
   font-family: inherit;
 }

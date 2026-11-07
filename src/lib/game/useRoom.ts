@@ -4,7 +4,7 @@
 // Cada cambio dispara una re-lectura con debounce: simple y a prueba de payloads.
 
 import { useEffect, useRef, useState } from "react";
-import { getSupabase } from "@/lib/supabase/client";
+import { getSupabase, supabaseConfigured } from "@/lib/supabase/client";
 import { fetchSnapshot, postAction, type RoomSnapshot } from "@/lib/game/client";
 
 export interface UseRoomResult extends RoomSnapshot {
@@ -26,6 +26,11 @@ export function useRoom(code: string, playerId?: string | null): UseRoomResult {
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const refresh = async () => {
+    if (!supabaseConfigured) {
+      setError("Supabase sin configurar");
+      setLoading(false);
+      return;
+    }
     try {
       const data = await fetchSnapshot(code);
       setSnap(data);
@@ -47,6 +52,7 @@ export function useRoom(code: string, playerId?: string | null): UseRoomResult {
 
   // Canal realtime
   useEffect(() => {
+    if (!supabaseConfigured) return;
     const db = getSupabase();
     const channel = db
       .channel(`room:${code}`)
