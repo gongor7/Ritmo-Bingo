@@ -115,3 +115,10 @@ vercel --prod
   género automáticamente.
 - **Presencia:** latido cada 12 s por jugador; quien no late en 45 s se marca
   desconectado y se salta en la rotación de turnos.
+
+---
+
+Desarrollado por **Cristhian Leandro Góngora Torrez**
+
+Repositorio: [github.com/gongor7/Ritmo-Bingo](https://github.com/gongor7/Ritmo-Bingo) ·
+Jugar: [ritmo-bingo.vercel.app](https://ritmo-bingo.vercel.app)
