@@ -118,7 +118,10 @@ for (let round = 1; round <= 50 && !winner; round++) {
       );
     const pick =
       candidates.find(({ i }) => p.rowTarget === Math.floor(i / 5)) ?? candidates[0];
-    if (!pick) throw new Error(`${p.name} no tiene celda ${color} disponible`);
+    if (!pick) {
+      log(`  ${p.name} no tiene celdas libres de ${color}, no marca`);
+      continue;
+    }
     const res = await api(`/api/rooms/${code}/action`, {
       action: "mark",
       playerId: p.id,
@@ -137,7 +140,11 @@ if (!winner) throw new Error("nadie ganó en 50 rondas");
 st = await roomRow(code);
 if (st.status !== "finished" || st.winner_id !== winner.id) throw new Error("estado final incorrecto");
 
-// ---------- revancha
+// ---------- revancha (se puede omitir para capturar el podio)
+if (process.env.SKIP_REMATCH === "1") {
+  log(`\nPARTIDA COMPLETA OK — ganó ${winner.name} (sala ${code}, sin revancha)`);
+  process.exit(0);
+}
 await api(`/api/rooms/${code}/action`, { action: "rematch", secret });
 st = await roomRow(code);
 const freshAna = await playerRow(code, winner.id);

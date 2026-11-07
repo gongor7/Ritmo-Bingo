@@ -5,6 +5,28 @@ ruleta y los eventos; los jugadores entran desde su celular con un código de
 4 caracteres, reciben un cartón de bingo de colores y compiten adivinando
 canciones. Cada color del cartón es un género musical.
 
+## Vista previa
+
+**Portada** — crea una sala o únete con el código de 4 caracteres.
+
+![Portada](docs/screens/portada.png)
+
+| Lobby del anfitrión: código + QR | La ruleta de los 6 géneros |
+|---|---|
+| ![Lobby](docs/screens/host-lobby.png) | ![Ruleta](docs/screens/host-ruleta.png) |
+
+| Al aire: suena el fragmento | Cada validado llena una casilla |
+|---|---|
+| ![Al aire](docs/screens/host-al-aire.png) | ![Marcado](docs/screens/host-marcado.png) |
+
+**Podio con revancha**
+
+![Ganador](docs/screens/host-ganador.png)
+
+| El cartón en el celular | Tocando una casilla del color |
+|---|---|
+| <img src="docs/screens/celular-carton.png" width="300"/> | <img src="docs/screens/celular-marcado.png" width="300"/> |
+
 ## Cómo se juega
 
 1. El anfitrión crea una sala desde la portada y la abre en la TV/proyector.
