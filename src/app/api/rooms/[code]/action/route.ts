@@ -55,7 +55,7 @@ async function pickSongFor(genre: GenreId, excludeSongId: string | null) {
     .from("songs")
     .select("id, title, artist")
     .eq("genre_id", genre)
-    .neq("preview_url", "none");
+    .or("preview_url.is.null,preview_url.neq.none");
   if (!songs || songs.length === 0) return null;
   let candidates = songs;
   if (songs.length > 1 && excludeSongId) {

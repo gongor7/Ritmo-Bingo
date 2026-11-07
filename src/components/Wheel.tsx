@@ -29,7 +29,7 @@ export function Wheel({ rotation, landedIndex, spinning, size = 420 }: WheelProp
   return (
     <div className="relative" style={{ width: size, height: size }}>
       {/* halo del color donde cayó */}
-      {landedIndex !== null && !spinning && (
+      {landedIndex !== null && landedIndex >= 0 && !spinning && (
         <div
           className="absolute inset-0 rounded-full animate-pulse-soft"
           style={{

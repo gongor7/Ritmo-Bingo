@@ -32,6 +32,7 @@ export function HostGame({ room, players, guesses, secret }: HostGameProps) {
 
   const listenMs = (room.settings?.listenSeconds ?? DEFAULT_LISTEN_SECONDS) * 1000;
   const colorIdx = room.color ? GENRES.findIndex((g) => g.id === room.color) : -1;
+  const landedIndex = colorIdx >= 0 ? colorIdx : null;
   const genre = room.color ? GENRE_MAP[room.color] : null;
   const turnPlayer = players.find((p) => p.id === room.turn_player_id) ?? null;
   const roundGuesses = guesses.filter((g) => g.round === room.round);
@@ -143,7 +144,7 @@ export function HostGame({ room, players, guesses, secret }: HostGameProps) {
       <div className="grid lg:grid-cols-[auto_1fr] gap-8 items-center flex-1">
         {/* ruleta */}
         <div className="flex flex-col items-center gap-5">
-          <Wheel rotation={rotation} landedIndex={colorIdx} spinning={spinning} size={400} />
+          <Wheel rotation={rotation} landedIndex={landedIndex} spinning={spinning} size={400} />
           <div className="text-center min-h-14">
             <AnimatePresence mode="wait">
               {room.phase === "intro" && turnPlayer && (
@@ -173,6 +174,22 @@ export function HostGame({ room, players, guesses, secret }: HostGameProps) {
         {/* panel contextual */}
         <div className="glass rounded-[2rem] p-8 min-h-[420px] flex flex-col">
           <AnimatePresence mode="wait">
+            {room.phase === "intro" && (
+              <motion.div
+                key="intro-panel"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex-1 flex flex-col items-center justify-center text-center gap-3"
+              >
+                <p className="tag">ronda {room.round}</p>
+                <p className="font-display font-bold text-2xl">
+                  {turnPlayer ? `Esperando que ${turnPlayer.name} gire` : "Esperando el giro"}
+                </p>
+                <p className="tag max-w-xs">el jugador en turno gira la ruleta desde su celular</p>
+              </motion.div>
+            )}
+
             {inSpinWindow && (
               <motion.div
                 key="spinning"

@@ -50,12 +50,15 @@ export function useRoom(code: string, playerId?: string | null): UseRoomResult {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code]);
 
-  // Canal realtime
+  // Canal realtime. Tópico único por montaje: StrictMode desmonta/remonta el
+  // efecto y reutilizar el mismo tópico deja el canal muerto en silencio.
+  const mountSeq = useRef(0);
   useEffect(() => {
     if (!supabaseConfigured) return;
     const db = getSupabase();
+    const seq = ++mountSeq.current;
     const channel = db
-      .channel(`room:${code}`)
+      .channel(`room:${code}:${seq}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "rooms", filter: `code=eq.${code}` },
@@ -84,6 +87,18 @@ export function useRoom(code: string, playerId?: string | null): UseRoomResult {
       void db.removeChannel(channel);
       if (debounce.current) clearTimeout(debounce.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code]);
+
+  // Red de seguridad: sondeo ligero mientras la pestaña está visible.
+  // Cubre navegadores/webviews cuyo websocket no recibe postgres_changes;
+  // con realtime activo el sondeo apenas hace lecturas redundantes.
+  useEffect(() => {
+    if (!supabaseConfigured) return;
+    const t = setInterval(() => {
+      if (document.visibilityState === "visible") void refresh();
+    }, 2500);
+    return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code]);
 
