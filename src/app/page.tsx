@@ -162,6 +162,17 @@ export default function Landing() {
       {error && <p className="mt-6 text-rock text-sm text-center max-w-md">{error}</p>}
 
       <p className="tag mt-12 text-center">sin cuentas — solo un código y tu teléfono</p>
+
+      <footer className="mt-8 pb-2 text-center">
+        <a
+          href="https://github.com/gongor7/Ritmo-Bingo"
+          target="_blank"
+          rel="noreferrer"
+          className="text-xs tracking-[0.18em] uppercase text-bone/35 hover:text-bone/70 transition"
+        >
+          desarrollado por Cristhian Leandro Góngora Torrez
+        </a>
+      </footer>
     </main>
   );
 }
