@@ -11,6 +11,30 @@ import { createRoom, lastRoomCode, rememberRoomCode, saveHostSecret } from "@/li
 
 const CODE_PATTERN = /^[A-Z0-9]{4}$/;
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "RITMO BINGO",
+  alternateName: "Bingo Musical en Vivo",
+  url: "https://ritmo-bingo.vercel.app",
+  applicationCategory: "GameApplication",
+  operatingSystem: "Web",
+  browserRequirements: "Requires JavaScript",
+  inLanguage: "es",
+  description:
+    "Juego de bingo musical en vivo: gira la ruleta de géneros, suena un fragmento de canción y adivina el título desde tu celular. Incluye música boliviana.",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  author: { "@type": "Person", name: "Cristhian Leandro Góngora Torrez" },
+  featureList: [
+    "Ruleta de 6 géneros musicales",
+    "Cartones de bingo de colores únicos por jugador",
+    "Fragmentos reales de 30 segundos de las canciones",
+    "Tiempo real desde el celular con código de sala",
+    "Género de música boliviana",
+    "Proyección a TV con Chromecast",
+  ],
+};
+
 export default function Landing() {
   const router = useRouter();
   const [code, setCode] = useState("");
@@ -46,6 +70,7 @@ export default function Landing() {
   return (
     <main className="relative flex-1 flex flex-col items-center justify-center px-5 py-10 overflow-hidden">
       <Ambient />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* título */}
       <motion.div
