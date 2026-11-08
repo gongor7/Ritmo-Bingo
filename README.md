@@ -41,8 +41,27 @@ canciones. Cada color del cartón es un género musical.
    en su cartón.
 6. Gana el primero que completa una fila. El host puede lanzar una revancha.
 
-Los seis géneros de la ruleta: Rock, Cumbia, Pop, Boliviano, Urbano y
-Clásicos 70s-90s. La base de canciones vive en `supabase/seed.sql`.
+## Proyectar en la tele
+
+En la pantalla del anfitrión (arriba a la derecha) hay dos botones:
+
+- **Proyectar en TV**: con Google Chrome y un Chromecast / Android TV / Google TV
+  en el mismo Wi-Fi, abre el selector de emisión de Chrome y la partida se
+  espeja en la tele (Presentation API; si el navegador no lo soporta, se muestra
+  una guía con alternativas). También sirve el menú de Chrome: Guardar y
+  compartir → Emitir.
+- **Pantalla completa**: para ver la partida sin barras del navegador.
+
+Otras vías: Smart TV con navegador (crea la sala desde el navegador de la TV —
+la tele queda como anfitriona) o cable HDMI.
+
+Los celulares siguen funcionando igual durante la proyección: la TV solo es el
+espejo de la pantalla del anfitrión.
+
+## Los seis géneros de la ruleta
+
+Rock, Cumbia, Pop, Boliviano, Urbano y Clásicos 70s-90s. La base de canciones
+vive en `supabase/seed.sql`.
 
 ## Stack
 

@@ -6,6 +6,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Ambient } from "@/components/Ambient";
+import { ProjectTV } from "@/components/host/ProjectTV";
 import { HostLobby } from "@/components/host/HostLobby";
 import { HostGame } from "@/components/host/HostGame";
 import { HostWinner } from "@/components/host/HostWinner";
@@ -130,9 +131,12 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <main className="relative flex-1 flex flex-col items-center justify-center px-5 py-8 gap-6">
       {children}
-      <Link href="/" className="tag hover:text-bone transition absolute top-5 right-6">
-        salir
-      </Link>
+      <div className="absolute top-5 right-6 flex items-center gap-3">
+        <ProjectTV />
+        <Link href="/" className="tag hover:text-bone transition">
+          salir
+        </Link>
+      </div>
     </main>
   );
 }
