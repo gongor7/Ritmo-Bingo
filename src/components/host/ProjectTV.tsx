@@ -22,6 +22,7 @@ export function ProjectTV() {
   const [supported, setSupported] = useState(true);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- detección de API del navegador al montar
     setSupported(Boolean(window.PresentationRequest));
     // habilita el icono de emisión nativo de Chrome en la barra de direcciones
     try {
