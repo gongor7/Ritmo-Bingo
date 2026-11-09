@@ -2,12 +2,12 @@
 
 // Fondo ambiental: blobs de color de los géneros flotando lentamente.
 
-import { GENRES } from "@/lib/game/config";
+import { ALL_GENRES } from "@/lib/game/config";
 
 export function Ambient() {
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden" aria-hidden>
-      {GENRES.map((g, i) => (
+      {ALL_GENRES.map((g, i) => (
         <div
           key={g.id}
           className="absolute rounded-full blur-[110px] opacity-[0.16]"

@@ -1,6 +1,6 @@
 // Tipos compartidos entre cliente y servidor.
 
-import type { CellGenre, GenreId } from "./config";
+import type { CellGenre, GenreId, GuessMode } from "./config";
 
 export type RoomStatus = "lobby" | "playing" | "finished";
 export type Phase = "lobby" | "intro" | "listening" | "revealing" | "marking" | "winner";
@@ -14,6 +14,8 @@ export interface Cell {
 
 export interface RoomSettings {
   listenSeconds: number;
+  genres: GenreId[]; // 3-5 géneros de la partida
+  guessMode: GuessMode; // qué se adivina: título, artista o ambos
 }
 
 export interface RoomRow {
@@ -29,6 +31,7 @@ export interface RoomRow {
   spin_started_at: string | null;
   guess_deadline: string | null;
   pending_markers: string[];
+  played_songs: string[]; // canciones ya sonadas en esta sala (sin repetir hasta agotar)
   winner_id: string | null;
   settings: RoomSettings;
   host_secret: string;

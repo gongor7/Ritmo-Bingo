@@ -1,10 +1,11 @@
 "use client";
 
-// Ruleta SVG de 6 segmentos. El padre controla el ángulo acumulado para que
-// cada giro continúe desde donde quedó el anterior (nunca retrocede).
+// Ruleta SVG con los géneros elegidos por el host (3-5 segmentos).
+// El padre controla el ángulo acumulado para que cada giro continúe desde
+// donde quedó el anterior (nunca retrocede).
 
 import { motion } from "framer-motion";
-import { GENRES, SPIN_SECONDS } from "@/lib/game/config";
+import { SPIN_SECONDS, type GenreDef } from "@/lib/game/config";
 
 function polar(cx: number, cy: number, r: number, deg: number) {
   const rad = ((deg - 90) * Math.PI) / 180;
@@ -18,14 +19,16 @@ function segmentPath(cx: number, cy: number, r: number, a0: number, a1: number) 
 }
 
 interface WheelProps {
+  genres: GenreDef[]; // segmentos, en orden
   rotation: number;
   landedIndex: number | null;
   spinning: boolean;
   size?: number;
 }
 
-export function Wheel({ rotation, landedIndex, spinning, size = 420 }: WheelProps) {
-  const seg = 360 / GENRES.length;
+export function Wheel({ genres, rotation, landedIndex, spinning, size = 420 }: WheelProps) {
+  const seg = 360 / genres.length;
+  const labelSize = genres.length > 4 ? 7.6 : 9;
   return (
     <div className="relative" style={{ width: size, height: size }}>
       {/* halo del color donde cayó */}
@@ -33,7 +36,7 @@ export function Wheel({ rotation, landedIndex, spinning, size = 420 }: WheelProp
         <div
           className="absolute inset-0 rounded-full animate-pulse-soft"
           style={{
-            boxShadow: `0 0 90px 12px ${GENRES[landedIndex].glow}, inset 0 0 40px ${GENRES[landedIndex].glow}`,
+            boxShadow: `0 0 90px 12px ${genres[landedIndex].glow}, inset 0 0 40px ${genres[landedIndex].glow}`,
           }}
         />
       )}
@@ -55,7 +58,7 @@ export function Wheel({ rotation, landedIndex, spinning, size = 420 }: WheelProp
           }
           style={{ transformOrigin: "100px 100px" }}
         >
-          {GENRES.map((g, i) => {
+          {genres.map((g, i) => {
             const a0 = i * seg;
             const a1 = (i + 1) * seg;
             const mid = a0 + seg / 2;
@@ -72,9 +75,9 @@ export function Wheel({ rotation, landedIndex, spinning, size = 420 }: WheelProp
                   x={label.x}
                   y={label.y}
                   fill={g.ink}
-                  fontSize="8.2"
+                  fontSize={labelSize}
                   fontWeight="800"
-                  letterSpacing="0.08em"
+                  letterSpacing="0.06em"
                   textAnchor="middle"
                   dominantBaseline="middle"
                   transform={`rotate(${mid}, ${label.x}, ${label.y})`}
@@ -90,7 +93,7 @@ export function Wheel({ rotation, landedIndex, spinning, size = 420 }: WheelProp
         {/* aro exterior */}
         <circle cx="100" cy="100" r="97" fill="none" stroke="rgba(244,242,236,.16)" strokeWidth="2" />
         {/* remaches */}
-        {GENRES.map((_, i) => {
+        {genres.map((_, i) => {
           const p = polar(100, 100, 96.5, i * seg);
           return <circle key={i} cx={p.x} cy={p.y} r="2" fill="#0b0b10" opacity="0.7" />;
         })}
@@ -113,8 +116,8 @@ export function Wheel({ rotation, landedIndex, spinning, size = 420 }: WheelProp
 }
 
 // Ángulo final (acumulado) para que el segmento i caiga bajo el puntero.
-export function targetRotation(currentRotation: number, index: number): number {
-  const seg = 360 / GENRES.length;
+export function targetRotation(currentRotation: number, index: number, totalSegments: number): number {
+  const seg = 360 / totalSegments;
   const center = index * seg + seg / 2;
   const mod = (((currentRotation % 360) + 360) % 360);
   const need = (((-center - mod) % 360) + 360) % 360;

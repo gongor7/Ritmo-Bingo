@@ -7,7 +7,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Wheel, targetRotation } from "@/components/Wheel";
 import { TimerRing } from "@/components/TimerRing";
 import { Equalizer } from "@/components/Equalizer";
-import { GENRES, GENRE_MAP, SPIN_SECONDS, DEFAULT_LISTEN_SECONDS } from "@/lib/game/config";
+import {
+  DEFAULT_GENRES,
+  DEFAULT_LISTEN_SECONDS,
+  GUESS_MODE_LABEL,
+  GENRE_MAP,
+  SPIN_SECONDS,
+  genresByIds,
+} from "@/lib/game/config";
 import { fetchPreviewUrl, postAction } from "@/lib/game/client";
 import { useNow } from "@/lib/game/useNow";
 import { standings } from "@/lib/game/turns";
@@ -31,7 +38,9 @@ export function HostGame({ room, players, guesses, secret }: HostGameProps) {
   const previewTries = useRef(0);
 
   const listenMs = (room.settings?.listenSeconds ?? DEFAULT_LISTEN_SECONDS) * 1000;
-  const colorIdx = room.color ? GENRES.findIndex((g) => g.id === room.color) : -1;
+  const wheelGenres = genresByIds(room.settings?.genres ?? DEFAULT_GENRES);
+  const guessMode = room.settings?.guessMode ?? "titulo";
+  const colorIdx = room.color ? wheelGenres.findIndex((g) => g.id === room.color) : -1;
   const landedIndex = colorIdx >= 0 ? colorIdx : null;
   const genre = room.color ? GENRE_MAP[room.color] : null;
   const turnPlayer = players.find((p) => p.id === room.turn_player_id) ?? null;
@@ -45,14 +54,14 @@ export function HostGame({ room, players, guesses, secret }: HostGameProps) {
     if (room.phase !== "listening" || !room.spin_started_at) return;
     if (lastSpinRef.current === room.spin_started_at) return;
     lastSpinRef.current = room.spin_started_at;
-    const idx = GENRES.findIndex((g) => g.id === room.color);
+    const idx = wheelGenres.findIndex((g) => g.id === room.color);
     if (idx < 0) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- sincroniza la animación con el evento de giro
-    setRotation((r) => targetRotation(r, idx));
+    setRotation((r) => targetRotation(r, idx, wheelGenres.length));
     setSpinning(true);
     const t = setTimeout(() => setSpinning(false), SPIN_SECONDS * 1000);
     return () => clearTimeout(t);
-  }, [room.phase, room.spin_started_at, room.color]);
+  }, [room.phase, room.spin_started_at, room.color, wheelGenres]);
 
   // ---------------------------------------------------- audio del host
   useEffect(() => {
@@ -144,7 +153,7 @@ export function HostGame({ room, players, guesses, secret }: HostGameProps) {
       <div className="grid lg:grid-cols-[auto_1fr] gap-8 items-center flex-1">
         {/* ruleta */}
         <div className="flex flex-col items-center gap-5">
-          <Wheel rotation={rotation} landedIndex={landedIndex} spinning={spinning} size={400} />
+          <Wheel genres={wheelGenres} rotation={rotation} landedIndex={landedIndex} spinning={spinning} size={400} />
           <div className="text-center min-h-14">
             <AnimatePresence mode="wait">
               {room.phase === "intro" && turnPlayer && (
@@ -251,7 +260,7 @@ export function HostGame({ room, players, guesses, secret }: HostGameProps) {
                       <p className="tag">respondieron</p>
                     </div>
                   </div>
-                  <p className="tag">escribe el título en el celular</p>
+                  <p className="tag">escribe tu respuesta en el celular · {GUESS_MODE_LABEL[guessMode]}</p>
                 </div>
               </motion.div>
             )}
@@ -264,11 +273,13 @@ export function HostGame({ room, players, guesses, secret }: HostGameProps) {
                 exit={{ opacity: 0, scale: 0.98 }}
                 className="flex-1 flex flex-col"
               >
-                <p className="tag">era</p>
+                <p className="tag">era · {GUESS_MODE_LABEL[guessMode]}</p>
                 <h2 className="font-display font-black text-3xl sm:text-4xl mt-2 leading-tight">
-                  {room.song_title}
+                  {guessMode === "artista" ? room.song_artist : room.song_title}
                 </h2>
-                <p className="text-bone/55 text-lg mt-1">{room.song_artist}</p>
+                <p className="text-bone/55 text-lg mt-1">
+                  {guessMode === "artista" ? room.song_title : room.song_artist}
+                </p>
 
                 <div className="flex-1 mt-6 overflow-y-auto max-h-56">
                   <p className="tag mb-3">

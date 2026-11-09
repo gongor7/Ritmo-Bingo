@@ -1,12 +1,14 @@
-// Generador de cartones 5x5.
+// Generador de cartones 5x5 para la selección de géneros del host (3-5 géneros).
 //
 // Reglas del diseño:
-//  - 24 celdas de género: exactamente 4 por cada uno de los 6 géneros.
-//  - 1 comodín central pre-marcado (espacio libre del bingo clásico).
-//  - Ninguna fila repite género; la fila central lleva 4 géneros + comodín.
-//  - Así toda fila es alcanzable y los cartones son únicos por jugador.
+//  - 24 celdas de género + 1 comodín central pre-marcado (espacio libre).
+//  - Reparto lo más parejo posible entre los géneros elegidos (24/G, los
+//    sobrantes van a los primeros géneros).
+//  - Dentro de cada fila se evita repetir color; con 3 o 4 géneros es
+//    inevitable repetir en una fila de 5, así que se reparte alternando.
+//  - Victoria = completar una fila (el comodín cuenta).
 
-import { CARD_SIZE, CELLS_PER_GENRE, GENRES, WILD, type GenreId } from "./config";
+import { CARD_SIZE, GENRE_MAP, WILD, type GenreId } from "./config";
 import type { Cell } from "./types";
 
 function shuffle<T>(arr: T[]): T[] {
@@ -18,40 +20,46 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-// Coloca el pozo de géneros (4 de cada uno) en filas de 5,5,4,5,5 sin repetir dentro de la fila.
-function buildRowGenres(): GenreId[][] | null {
-  const pool: GenreId[] = [];
-  for (const g of GENRES) for (let i = 0; i < CELLS_PER_GENRE; i++) pool.push(g.id);
-  const rowSizes = [5, 5, 4, 5, 5]; // la fila 2 es la del comodín
+function buildRows(genres: GenreId[]): GenreId[][] | null {
+  const counts = new Map<GenreId, number>();
+  const base = Math.floor(24 / genres.length);
+  let extra = 24 - base * genres.length;
+  for (const g of genres) {
+    counts.set(g, base + (extra-- > 0 ? 1 : 0));
+  }
+
+  const rowSizes = [5, 5, 4, 5, 5]; // la fila 2 lleva el comodín
   const rows: GenreId[][] = [];
 
   for (const size of rowSizes) {
     const row: GenreId[] = [];
-    let attempts = 0;
-    while (row.length < size) {
-      const remaining = pool.filter((g) => !row.includes(g));
-      if (remaining.length === 0) break; // imposible: reintentar todo
-      const pick = remaining[Math.floor(Math.random() * remaining.length)];
+    for (let pos = 0; pos < size; pos++) {
+      // candidatos: géneros con cupo, que no estén ya en la fila;
+      // si no hay (pocos géneros), permitir repetido pero no pegado.
+      let candidates = genres.filter((g) => (counts.get(g) ?? 0) > 0 && !row.includes(g));
+      if (candidates.length === 0) {
+        candidates = genres.filter((g) => (counts.get(g) ?? 0) > 0 && (row.length === 0 || row[row.length - 1] !== g));
+      }
+      if (candidates.length === 0) return null; // atascado: reintentar todo
+      // prioridad: el que más cupo le queda (reparto parejo), con azar
+      const maxLeft = Math.max(...candidates.map((g) => counts.get(g) ?? 0));
+      const best = candidates.filter((g) => counts.get(g) === maxLeft);
+      const pick = best[Math.floor(Math.random() * best.length)];
       row.push(pick);
-      pool.splice(pool.indexOf(pick), 1);
-      attempts++;
-      if (attempts > 50) break;
+      counts.set(pick, (counts.get(pick) ?? 0) - 1);
     }
-    if (row.length !== size) return null; // atascado, reintentar
-    rows.push(shuffle(row));
+    rows.push(row);
   }
   return rows;
 }
 
-export function generateCard(): Cell[] {
-  for (let attempt = 0; attempt < 200; attempt++) {
-    const rows = buildRowGenres();
-    if (!rows) continue;
+export function generateCard(genres: GenreId[]): Cell[] {
+  const valid = genres.filter((g) => GENRE_MAP[g]);
+  if (valid.length < 2) throw new Error("card-generation-failed: se necesitan al menos 2 géneros");
 
-    // Validación: cada género exactamente 4 veces.
-    const counts = new Map<string, number>();
-    rows.flat().forEach((g) => counts.set(g, (counts.get(g) ?? 0) + 1));
-    if (GENRES.some((g) => counts.get(g.id) !== CELLS_PER_GENRE)) continue;
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const rows = buildRows(shuffle(valid));
+    if (!rows) continue;
 
     const cells: Cell[] = [];
     for (let r = 0; r < CARD_SIZE; r++) {
@@ -59,7 +67,9 @@ export function generateCard(): Cell[] {
         if (r === 2 && c === 2) {
           cells.push({ g: WILD, marked: true, song: null, round: null });
         } else {
-          cells.push({ g: rows[r].pop() as GenreId, marked: false, song: null, round: null });
+          // la fila del comodín tiene 4 géneros: saltan la columna central
+          const gi = r === 2 && c > 2 ? c - 1 : c;
+          cells.push({ g: rows[r][gi], marked: false, song: null, round: null });
         }
       }
     }

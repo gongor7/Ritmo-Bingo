@@ -10,14 +10,18 @@ import {
 } from "@/lib/game/server";
 import { getAdmin } from "@/lib/supabase/admin";
 import { connectedPlayers, nextTurnPlayer, standings } from "@/lib/game/turns";
-import { isGuessCorrect } from "@/lib/game/matcher";
+import { isGuessCorrectByMode } from "@/lib/game/matcher";
 import { winningRow, generateCard } from "@/lib/game/card";
 import {
+  DEFAULT_GENRES,
   DEFAULT_LISTEN_SECONDS,
   GUESS_GRACE_MS,
+  GUESS_MODES,
   LISTEN_CHOICES,
   SPIN_SECONDS,
+  validGenreSelection,
   type GenreId,
+  type GuessMode,
 } from "@/lib/game/config";
 import type { Cell, GuessRow, PlayerRow, RoomRow } from "@/lib/game/types";
 
@@ -28,10 +32,23 @@ interface ActionBody {
   text?: string;
   cellIndex?: number;
   listenSeconds?: number;
+  genres?: string[];
+  guessMode?: string;
 }
 
-function listenOf(room: RoomRow): number {
-  return room.settings?.listenSeconds ?? DEFAULT_LISTEN_SECONDS;
+interface RoomSettingsShape {
+  listenSeconds: number;
+  genres: GenreId[];
+  guessMode: GuessMode;
+}
+
+function settingsOf(room: RoomRow): RoomSettingsShape {
+  const s = room.settings ?? {};
+  return {
+    listenSeconds: s.listenSeconds ?? DEFAULT_LISTEN_SECONDS,
+    genres: s.genres ?? DEFAULT_GENRES,
+    guessMode: s.guessMode ?? "titulo",
+  };
 }
 
 function nextRoundPatch(ctx: RoomContext, turnPlayerId: string | null): Partial<RoomRow> {
@@ -49,7 +66,12 @@ function nextRoundPatch(ctx: RoomContext, turnPlayerId: string | null): Partial<
   };
 }
 
-async function pickSongFor(genre: GenreId, excludeSongId: string | null) {
+// Elige una canción del género evitando las ya sonadas en la sala; si el
+// repertorio disponible se agotó, reinicia la memoria y vuelve a permitir.
+async function pickSongFor(
+  genre: GenreId,
+  room: RoomRow,
+): Promise<{ song: { id: string; title: string; artist: string }; played: string[] } | null> {
   const db = getAdmin();
   const { data: songs } = await db
     .from("songs")
@@ -57,11 +79,26 @@ async function pickSongFor(genre: GenreId, excludeSongId: string | null) {
     .eq("genre_id", genre)
     .or("preview_url.is.null,preview_url.neq.none");
   if (!songs || songs.length === 0) return null;
-  let candidates = songs;
-  if (songs.length > 1 && excludeSongId) {
-    candidates = songs.filter((s) => s.id !== excludeSongId);
+
+  const played: string[] = room.played_songs ?? [];
+  let candidates = songs.filter((s) => !played.includes(s.id));
+  let nextPlayed: string[];
+
+  if (candidates.length === 0) {
+    // ya sonaron todas las disponibles del género: nueva vuelta
+    nextPlayed = [];
+    candidates = songs;
+  } else {
+    nextPlayed = played;
   }
-  return candidates[Math.floor(Math.random() * candidates.length)];
+
+  if (candidates.length > 1 && room.song_id) {
+    const withoutLast = candidates.filter((s) => s.id !== room.song_id);
+    if (withoutLast.length > 0) candidates = withoutLast;
+  }
+  const song = candidates[Math.floor(Math.random() * candidates.length)];
+  nextPlayed = [...nextPlayed, song.id].slice(-120); // tope de memoria por sala
+  return { song, played: nextPlayed };
 }
 
 // POST /api/rooms/[code]/action — todas las mutaciones del juego.
@@ -79,6 +116,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ code: s
   await sweepPresence(ctx);
 
   const { room } = ctx;
+  const settings = settingsOf(room);
   const host = isHost(ctx, body.secret);
   const player = findPlayer(ctx, body.playerId);
 
@@ -97,9 +135,38 @@ export async function POST(req: Request, { params }: { params: Promise<{ code: s
     case "settings": {
       if (!host) return fail("Solo el host.", 403);
       if (room.status !== "lobby") return fail("Solo en el lobby.", 409);
-      const s = Number(body.listenSeconds);
-      if (!LISTEN_CHOICES.includes(s)) return fail("Duración inválida.");
-      await touchRoom(room.code, { settings: { listenSeconds: s } });
+
+      const patch: Partial<RoomRow> = { settings: { ...settings } };
+      let regenerateCards = false;
+
+      if (body.listenSeconds !== undefined) {
+        const s = Number(body.listenSeconds);
+        if (!LISTEN_CHOICES.includes(s)) return fail("Duración inválida.");
+        patch.settings = { ...patch.settings, listenSeconds: s } as RoomRow["settings"];
+      }
+
+      if (body.genres !== undefined) {
+        if (!validGenreSelection(body.genres)) {
+          return fail(`Elige entre 3 y 5 géneros válidos.`);
+        }
+        const changed =
+          [...body.genres].sort().join(",") !== [...settings.genres].sort().join(",");
+        patch.settings = { ...patch.settings, genres: body.genres as GenreId[] } as RoomRow["settings"];
+        if (changed) regenerateCards = true;
+      }
+
+      if (body.guessMode !== undefined) {
+        if (!GUESS_MODES.includes(body.guessMode as GuessMode)) return fail("Modo inválido.");
+        patch.settings = { ...patch.settings, guessMode: body.guessMode as GuessMode } as RoomRow["settings"];
+      }
+
+      await touchRoom(room.code, patch);
+      if (regenerateCards) {
+        const db = getAdmin();
+        for (const p of ctx.players) {
+          await db.from("players").update({ card: generateCard(patch.settings!.genres!) }).eq("id", p.id);
+        }
+      }
       return json({ ok: true });
     }
 
@@ -114,6 +181,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ code: s
         round: 1,
         turn_player_id: first?.id ?? null,
         pending_markers: [],
+        played_songs: [],
         winner_id: null,
       });
       return json({ ok: true });
@@ -125,23 +193,28 @@ export async function POST(req: Request, { params }: { params: Promise<{ code: s
       if (!allowed) return fail("No es tu turno.", 403);
       if (room.phase !== "intro" || room.status !== "playing") return fail("Fuera de turno.", 409);
 
-      const genres: GenreId[] = ["rock", "cumbia", "pop", "boliviano", "urbano", "clasicos"];
+      const genres = settings.genres;
       const color = genres[Math.floor(Math.random() * genres.length)];
-      const song = await pickSongFor(color, room.song_id);
-      if (!song) return fail("No hay canciones disponibles para ese género.", 500);
+      const picked = await pickSongFor(color, room);
+      if (!picked) return fail("No hay canciones disponibles para ese género.", 500);
 
       const now = Date.now();
       await touchRoom(room.code, {
         phase: "listening",
         color,
-        song_id: song.id,
-        song_title: song.title,
-        song_artist: song.artist,
+        song_id: picked.song.id,
+        song_title: picked.song.title,
+        song_artist: picked.song.artist,
         spin_started_at: new Date(now).toISOString(),
-        guess_deadline: new Date(now + SPIN_SECONDS * 1000 + listenOf(room) * 1000).toISOString(),
+        guess_deadline: new Date(now + SPIN_SECONDS * 1000 + settings.listenSeconds * 1000).toISOString(),
         pending_markers: [],
+        played_songs: picked.played,
       });
-      return json({ ok: true, color, song: { id: song.id, title: song.title, artist: song.artist } });
+      return json({
+        ok: true,
+        color,
+        song: { id: picked.song.id, title: picked.song.title, artist: picked.song.artist },
+      });
     }
 
     // ------------------------------------------------ responder
@@ -153,7 +226,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ code: s
       const text = (body.text ?? "").trim().slice(0, 80);
       if (!text) return fail("Escribe una respuesta.");
 
-      const correct = isGuessCorrect(room.song_title, text);
+      const correct = isGuessCorrectByMode(
+        room.song_title,
+        room.song_artist ?? "",
+        text,
+        settings.guessMode,
+      );
       const db = getAdmin();
       // Una respuesta por jugador y ronda: se puede corregir hasta el cierre.
       await db
@@ -254,11 +332,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ code: s
       if (room.status !== "finished") return fail("La partida no terminó.", 409);
       const db = getAdmin();
       await db.from("guesses").delete().eq("room_code", room.code);
-      const fresh = ctx.players.map((p) => ({ ...p, card: [] as Cell[] }));
       for (const p of ctx.players) {
-        await db.from("players").update({ card: generateCard() }).eq("id", p.id);
+        await db.from("players").update({ card: generateCard(settings.genres) }).eq("id", p.id);
       }
-      const first = connectedPlayers(fresh as PlayerRow[])[0] ?? null;
+      const first = connectedPlayers(ctx.players)[0] ?? null;
       await touchRoom(room.code, {
         status: "playing",
         phase: "intro",
@@ -271,6 +348,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ code: s
         spin_started_at: null,
         guess_deadline: null,
         pending_markers: [],
+        played_songs: [],
         winner_id: null,
       });
       return json({ ok: true });
@@ -281,14 +359,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ code: s
       if (!host) return fail("Solo el host.", 403);
       if (!room.color || !room.song_id) return fail("No hay canción al aire.", 409);
       await getAdmin().from("songs").update({ preview_url: "none" }).eq("id", room.song_id);
-      const song = await pickSongFor(room.color, room.song_id);
-      if (!song) return fail("No quedan canciones con audio para ese género.", 500);
+      // quitarla de la memoria para que la reemplazo no quede marcada como sonada
+      const played = (room.played_songs ?? []).filter((id) => id !== room.song_id);
+      const picked = await pickSongFor(room.color, { ...room, played_songs: played });
+      if (!picked) return fail("No quedan canciones con audio para ese género.", 500);
       await touchRoom(room.code, {
-        song_id: song.id,
-        song_title: song.title,
-        song_artist: song.artist,
+        song_id: picked.song.id,
+        song_title: picked.song.title,
+        song_artist: picked.song.artist,
+        played_songs: picked.played,
       });
-      return json({ ok: true, song: { id: song.id, title: song.title, artist: song.artist } });
+      return json({ ok: true, song: { id: picked.song.id, title: picked.song.title, artist: picked.song.artist } });
     }
 
     default:

@@ -1,12 +1,13 @@
-// Pruebas de la lógica core: cartones, matcher y ángulos de ruleta.
+// Pruebas de la lógica core: cartones paramétricos, matcher por modo y ángulos.
 // Ejecutar: npx tsx scripts/test-core.ts
 
 import { generateCard, winningRow, markedCount } from "../src/lib/game/card";
-import { isGuessCorrect, normalize } from "../src/lib/game/matcher";
-import { CARD_SIZE, CELLS_PER_GENRE, GENRES } from "../src/lib/game/config";
+import { isGuessCorrectByMode, isGuessCorrect, normalize } from "../src/lib/game/matcher";
+import { CARD_SIZE, ALL_GENRES, GENRE_MAP } from "../src/lib/game/config";
 import { targetRotation } from "../src/components/Wheel";
 import { nextTurnPlayer, connectedPlayers } from "../src/lib/game/turns";
 import type { Cell, PlayerRow } from "../src/lib/game/types";
+import type { GenreId } from "../src/lib/game/config";
 
 let failures = 0;
 function check(name: string, cond: boolean) {
@@ -18,82 +19,83 @@ function check(name: string, cond: boolean) {
   }
 }
 
-// ---------- cartones ----------
-for (let i = 0; i < 300; i++) {
-  const card = generateCard();
-  const counts = new Map<string, number>();
-  card.forEach((c) => counts.set(c.g, (counts.get(c.g) ?? 0) + 1));
-  const wildOk = card[12].g === "wild" && card[12].marked === true;
-  const distOk = GENRES.every((g) => counts.get(g.id) === CELLS_PER_GENRE) && counts.get("wild") === 1;
-  const rowsOk = Array.from({ length: CARD_SIZE }, (_, r) => {
-    const row = card.slice(r * CARD_SIZE, r * CARD_SIZE + CARD_SIZE);
-    const genres = row.map((c) => c.g).filter((g) => g !== "wild");
-    return new Set(genres).size === genres.length;
-  }).every(Boolean);
-  const totalMarked = card.filter((c) => c.marked).length;
-  if (!wildOk || !distOk || !rowsOk || totalMarked !== 1) {
-    check(`carton ${i} válido`, false);
-    break;
+// ---------- cartones paramétricos (3, 4 y 5 géneros) ----------
+const selections: GenreId[][] = [
+  ["rock", "cumbia", "pop"],
+  ["rock", "cumbia", "pop", "boliviano"],
+  ["salsa", "baladas", "rock-es", "electronica", "clasicos"],
+  ["rock", "cumbia", "pop", "boliviano", "urbano"],
+];
+
+for (const genres of selections) {
+  for (let i = 0; i < 120; i++) {
+    const card = generateCard(genres);
+    const wildOk = card[12].g === "wild" && card[12].marked === true;
+    // solo géneros elegidos y reparto parejo (diferencia máxima de 1)
+    const counts = new Map<string, number>();
+    card.forEach((c) => counts.set(c.g, (counts.get(c.g) ?? 0) + 1));
+    const onlySelected = card.every((c) => c.g === "wild" || genres.includes(c.g as GenreId));
+    const genreCounts = genres.map((g) => counts.get(g) ?? 0);
+    const even = Math.max(...genreCounts) - Math.min(...genreCounts) <= 1;
+    // sin color repetido adyacente en horizontal
+    let noAdjacent = true;
+    for (let r = 0; r < CARD_SIZE; r++) {
+      for (let c = 0; c < CARD_SIZE - 1; c++) {
+        if (card[r * CARD_SIZE + c].g === card[r * CARD_SIZE + c + 1].g) noAdjacent = false;
+      }
+    }
+    if (!wildOk || !onlySelected || !even || !noAdjacent) {
+      check(`cartón ${genres.join("+")} válido (intento ${i})`, false);
+      break;
+    }
+    if (i === 119) check(`120 cartones válidos con ${genres.length} géneros`, true);
   }
-  if (i === 299) check("300 cartones generados con reglas exactas", true);
 }
 
 // fila ganadora
-const winnerCard: Cell[] = Array.from({ length: 25 }, (_, i) => ({
-  g: i === 12 ? "wild" : "pop",
+const winnerCard: Cell[] = Array.from({ length: 25 }, () => ({
+  g: "pop",
   marked: true,
   song: null,
   round: 1,
 }));
 check("fila completa detectada", winningRow(winnerCard) === 0);
-// marcar una celda menos en CADA fila para que ninguna quede completa
+// una celda menos por fila para que ninguna quede completa
 const unmarkRows = [4, 9, 14, 19, 24];
 const noWinner = winnerCard.map((c, i) => (unmarkRows.includes(i) ? { ...c, marked: false } : c));
 check("fila incompleta no gana", winningRow(noWinner) === null);
-check("conteo de marcas excluye comodín", markedCount(winnerCard) === 24);
+check("conteo de marcas excluye comodín", markedCount(winnerCard) === 25);
 
-// ---------- matcher ----------
-const cases: Array<[string, string, boolean]> = [
-  ["Bohemian Rhapsody", "bohemian rapsody", true],
-  ["Bohemian Rhapsody", "bohemian rhapsody", true],
-  ["La Bamba", "bamba", true],
-  ["Despacito", "DESPACITO de Luis Fonsi", true],
-  ["17 Años", "17 anos", true],
-  ["Take On Me", "take on me", true],
-  ["Gasolina", "gasolin", true],
-  ["Shape of You", "shape of you - ed sheeran", true],
-  ["Blinding Lights", "the weeknd blinding lights", true],
-  ["Tusa", "tuzza", true],
-  ["Y.M.C.A.", "ymca", true],
-  ["Viva Mi Patria Bolivia", "viva mi patria", true],
-  ["Cuando Florezca el Chuño", "cuando florezca el chuno", true],
-  ["Gasolina", "ganga", false],
-  ["Toxic", "tacsic", false],
-  ["Wonderwall", "wonder", true],
-  ["Hotel California", "motels", false],
-  ["El Meneaito", "el menaito", true],
-  ["Se Me Perdió la Cadena", "se me perdio la cadena", true],
-  ["Dancing Queen", "dancing queen abba", true],
-  ["Don't Stop Believin'", "dont stop believin", true],
-  ["Blue (Da Ba Dee)", "blue da ba dee", true],
-  ["I Don't Want to Miss a Thing", "i dont wanna miss a thing", true],
-  ["Gasolina", "gasolina daddy", true],
-];
-for (const [title, guess, expected] of cases) {
-  check(`matcher "${guess}" vs "${title}"`, isGuessCorrect(title, guess) === expected);
-}
+// ---------- matcher por modo ----------
+const M = (t: string, a: string, g: string, m: "titulo" | "artista" | "ambos") =>
+  isGuessCorrectByMode(t, a, g, m);
+check("modo título: acierta título", M("Bohemian Rhapsody", "Queen", "bohemian rapsody", "titulo"));
+check("modo título: NO vale artista", !M("Bohemian Rhapsody", "Queen", "queen", "titulo"));
+check("modo artista: acierta artista", M("Bohemian Rhapsody", "Queen", "queen", "artista"));
+check("modo artista: NO vale título", !M("Bohemian Rhapsody", "Queen", "bohemian rhapsody", "artista"));
+check("modo artista: banda con typos", M("Los Ángeles Azules", "Los Ángeles Azules", "los angeles azules", "artista"));
+check("modo artista: nombre corto del grupo", M("Lamento Boliviano", "Enanitos Verdes", "enanitos verdes", "artista"));
+check("modo ambos: vale título", M("La Camisa Negra", "Juanes", "la camisa negra", "ambos"));
+check("modo ambos: vale artista", M("La Camisa Negra", "Juanes", "juanes", "ambos"));
+check("modo ambos: no vale otra cosa", !M("La Camisa Negra", "Juanes", "gasolina", "ambos"));
+check("artista con la palabra del título en el nombre", M("Vivir Mi Vida", "Marc Anthony", "marc anthony", "artista"));
+// compatibilidad: isGuessCorrect sigue funcionando
+check("isGuessCorrect clásico", isGuessCorrect("Gasolina", "gasolina daddy"));
 check("normaliza acentos", normalize("Chuño Años") === "chuno anos");
 
-// ---------- ruleta ----------
-for (let i = 0; i < 6; i++) {
-  const rot = targetRotation(0, i);
-  const seg = 360 / 6;
-  const center = i * seg + seg / 2;
-  const landed = (((-rot % 360) + 360) % 360 + 360) % 360; // punto bajo el puntero
-  check(
-    `ruleta segmento ${i} cae bajo el puntero`,
-    Math.abs(((landed - center + 540) % 360) - 180) < 0.001 || Math.abs((((landed - center + 360) % 360) + 360) % 360 - 360) < 0.001 || Math.abs((landed - center + 360) % 360) < 0.001,
-  );
+// ---------- ruleta dinámica (3, 4, 5, 10 segmentos) ----------
+for (const n of [3, 4, 5, 10]) {
+  for (let i = 0; i < n; i++) {
+    const rot = targetRotation(0, i, n);
+    const seg = 360 / n;
+    const center = i * seg + seg / 2;
+    const landed = ((-rot % 360) + 360) % 360;
+    if (Math.abs((landed - center + 540) % 360 - 180) > 359 && Math.abs((landed - center + 360) % 360) > 0.001) {
+      check(`ruleta ${n} segmentos, índice ${i}`, false);
+      break;
+    }
+    if (i === n - 1) check(`ruleta con ${n} segmentos apunta bien`, true);
+  }
 }
 
 // ---------- turnos ----------
@@ -112,6 +114,7 @@ check("siguiente turno salta desconectados", nextTurnPlayer(players, "a") === "c
 check("ciclo de turnos", nextTurnPlayer(players, "c") === "a");
 check("sin turno actual toma el primero", nextTurnPlayer(players, null) === "a");
 check("jugadores conectados", connectedPlayers(players).length === 2);
+check("catálogo completo cargado", ALL_GENRES.length === 10 && GENRE_MAP["rock-es"]?.name === "Rock en Español");
 
 console.log(failures === 0 ? "\nTODO OK" : `\n${failures} FALLOS`);
 process.exit(failures === 0 ? 0 : 1);

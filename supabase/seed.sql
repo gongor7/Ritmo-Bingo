@@ -1,83 +1,134 @@
 -- ============================================================
--- RITMO BINGO - semilla: 6 generos + ~100 canciones
--- Ejecutar DESPUES de schema.sql en Supabase SQL Editor
+-- RITMO BINGO - semilla completa v2: 10 géneros + ~230 canciones
+-- Para proyectos NUEVOS (o para recargar la base desde cero).
+-- Ejecutar DESPUÉS de schema.sql en Supabase SQL Editor.
+-- Si tu base ya tenía la v1, usa update-2026-11.sql en su lugar.
 -- ============================================================
 
 insert into genres (id, name, color, ink, position) values
-  ('rock',      'Rock',      '#e5484d', '#0b0b10', 0),
-  ('cumbia',    'Cumbia',    '#ff8a1e', '#0b0b10', 1),
-  ('pop',       'Pop',       '#3e9bff', '#0b0b10', 2),
-  ('boliviano', 'Boliviano', '#2ec27e', '#0b0b10', 3),
-  ('urbano',    'Urbano',    '#9a5bff', '#0b0b10', 4),
-  ('clasicos',  'Clásicos',  '#ffd22e', '#0b0b10', 5)
+  ('rock',        'Rock',            '#e5484d', '#0b0b10', 0),
+  ('cumbia',      'Cumbia',          '#ff8a1e', '#0b0b10', 1),
+  ('pop',         'Pop',             '#3e9bff', '#0b0b10', 2),
+  ('boliviano',   'Boliviano',       '#2ec27e', '#0b0b10', 3),
+  ('urbano',      'Urbano',          '#9a5bff', '#0b0b10', 4),
+  ('clasicos',    'Clásicos',        '#ffd22e', '#0b0b10', 5),
+  ('salsa',       'Salsa',           '#ec4899', '#0b0b10', 6),
+  ('baladas',     'Baladas',         '#14b8a6', '#0b0b10', 7),
+  ('rock-es',     'Rock en Español', '#a3e635', '#0b0b10', 8),
+  ('electronica', 'Electrónica',     '#f4f2ec', '#0b0b10', 9)
 on conflict (id) do nothing;
 
 -- limpiar canciones si se re-ejecuta la semilla
-delete from songs where genre_id in ('rock','pop','urbano','cumbia','boliviano','clasicos');
+delete from songs where genre_id in
+  ('rock','pop','urbano','cumbia','boliviano','clasicos','salsa','baladas','rock-es','electronica');
 
--- ---------- ROCK ----------
+-- ---------- ROCK (34) ----------
 insert into songs (genre_id, title, artist) values
   ('rock', 'Bohemian Rhapsody', 'Queen'),
   ('rock', 'Hotel California', 'Eagles'),
   ('rock', 'Sweet Child O'' Mine', 'Guns N'' Roses'),
+  ('rock', 'November Rain', 'Guns N'' Roses'),
   ('rock', 'Back In Black', 'AC/DC'),
   ('rock', 'Highway to Hell', 'AC/DC'),
   ('rock', 'Smells Like Teen Spirit', 'Nirvana'),
   ('rock', 'Smoke on the Water', 'Deep Purple'),
   ('rock', 'Stairway to Heaven', 'Led Zeppelin'),
   ('rock', 'Enter Sandman', 'Metallica'),
+  ('rock', 'Nothing Else Matters', 'Metallica'),
   ('rock', 'Wonderwall', 'Oasis'),
   ('rock', 'Livin'' on a Prayer', 'Bon Jovi'),
   ('rock', 'Eye of the Tiger', 'Survivor'),
   ('rock', 'The Final Countdown', 'Europe'),
   ('rock', 'Another One Bites the Dust', 'Queen'),
+  ('rock', 'We Will Rock You', 'Queen'),
   ('rock', 'Don''t Stop Believin''', 'Journey'),
   ('rock', 'Californication', 'Red Hot Chili Peppers'),
+  ('rock', 'Under the Bridge', 'Red Hot Chili Peppers'),
   ('rock', 'I Don''t Want to Miss a Thing', 'Aerosmith'),
-  ('rock', 'Satisfaction', 'The Rolling Stones');
+  ('rock', 'Satisfaction', 'The Rolling Stones'),
+  ('rock', 'Comfortably Numb', 'Pink Floyd'),
+  ('rock', 'Another Brick in the Wall', 'Pink Floyd'),
+  ('rock', 'Creep', 'Radiohead'),
+  ('rock', 'Still Loving You', 'Scorpions'),
+  ('rock', 'Wind of Change', 'Scorpions'),
+  ('rock', 'With or Without You', 'U2'),
+  ('rock', 'Chop Suey', 'System of a Down'),
+  ('rock', 'In the End', 'Linkin Park'),
+  ('rock', 'Numb', 'Linkin Park'),
+  ('rock', 'Sweet Home Alabama', 'Lynyrd Skynyrd'),
+  ('rock', 'More Than Words', 'Extreme'),
+  ('rock', 'Zombie', 'The Cranberries');
 
--- ---------- POP ----------
+-- ---------- POP (34) ----------
 insert into songs (genre_id, title, artist) values
   ('pop', 'Billie Jean', 'Michael Jackson'),
   ('pop', 'Shape of You', 'Ed Sheeran'),
+  ('pop', 'Thinking Out Loud', 'Ed Sheeran'),
   ('pop', 'Uptown Funk', 'Mark Ronson'),
   ('pop', 'Rolling in the Deep', 'Adele'),
   ('pop', 'Bad Romance', 'Lady Gaga'),
+  ('pop', 'Die With A Smile', 'Lady Gaga'),
   ('pop', 'Shake It Off', 'Taylor Swift'),
+  ('pop', 'Blank Space', 'Taylor Swift'),
+  ('pop', 'Cruel Summer', 'Taylor Swift'),
+  ('pop', 'Anti-Hero', 'Taylor Swift'),
   ('pop', 'Blinding Lights', 'The Weeknd'),
+  ('pop', 'Save Your Tears', 'The Weeknd'),
+  ('pop', 'Starboy', 'The Weeknd'),
   ('pop', 'As It Was', 'Harry Styles'),
+  ('pop', 'Watermelon Sugar', 'Harry Styles'),
   ('pop', 'Levitating', 'Dua Lipa'),
   ('pop', 'Like a Prayer', 'Madonna'),
   ('pop', 'Toxic', 'Britney Spears'),
   ('pop', 'Firework', 'Katy Perry'),
+  ('pop', 'Roar', 'Katy Perry'),
   ('pop', 'Hips Don''t Lie', 'Shakira'),
   ('pop', 'Hey Jude', 'The Beatles'),
   ('pop', 'Counting Stars', 'OneRepublic'),
+  ('pop', 'Believer', 'Imagine Dragons'),
   ('pop', 'Flowers', 'Miley Cyrus'),
+  ('pop', 'Wrecking Ball', 'Miley Cyrus'),
   ('pop', 'Viva la Vida', 'Coldplay'),
-  ('pop', 'Gangnam Style', 'PSY');
+  ('pop', 'Gangnam Style', 'PSY'),
+  ('pop', 'Bad Guy', 'Billie Eilish'),
+  ('pop', 'Espresso', 'Sabrina Carpenter'),
+  ('pop', 'Call Me Maybe', 'Carly Rae Jepsen'),
+  ('pop', 'Sorry', 'Justin Bieber'),
+  ('pop', 'Treat You Better', 'Shawn Mendes');
 
--- ---------- URBANO ----------
+-- ---------- URBANO (29) ----------
 insert into songs (genre_id, title, artist) values
   ('urbano', 'Gasolina', 'Daddy Yankee'),
+  ('urbano', 'Con Calma', 'Daddy Yankee'),
+  ('urbano', 'Shaky Shaky', 'Daddy Yankee'),
   ('urbano', 'Despacito', 'Luis Fonsi'),
   ('urbano', 'Taki Taki', 'DJ Snake'),
   ('urbano', 'Dákiti', 'Bad Bunny'),
+  ('urbano', 'Safaera', 'Bad Bunny'),
+  ('urbano', 'Yo Perreo Sola', 'Bad Bunny'),
+  ('urbano', 'Tití Me Preguntó', 'Bad Bunny'),
+  ('urbano', 'Me Porto Bonito', 'Bad Bunny'),
+  ('urbano', 'Monotonía', 'Bad Bunny'),
   ('urbano', 'Tusa', 'Karol G'),
-  ('urbano', 'Con Calma', 'Daddy Yankee'),
+  ('urbano', 'Provenza', 'Karol G'),
+  ('urbano', 'Bichota', 'Karol G'),
+  ('urbano', 'TQG', 'Karol G'),
   ('urbano', 'Bailando', 'Enrique Iglesias'),
   ('urbano', 'Felices los 4', 'Maluma'),
-  ('urbano', 'Safaera', 'Bad Bunny'),
   ('urbano', 'Ginza', 'J Balvin'),
   ('urbano', 'Mi Gente', 'J Balvin'),
-  ('urbano', 'Yo Perreo Sola', 'Bad Bunny'),
   ('urbano', 'China', 'Anuel AA'),
   ('urbano', 'Baila Baila Baila', 'Ozuna'),
   ('urbano', 'Pepas', 'Farruko'),
   ('urbano', 'Rakata', 'Wisin & Yandel'),
-  ('urbano', 'Shaky Shaky', 'Daddy Yankee');
+  ('urbano', 'Bzrp Music Sessions Vol. 53', 'Bizarrap'),
+  ('urbano', 'Ella Baila Sola', 'Eslabon Armado'),
+  ('urbano', 'Luna', 'Feid'),
+  ('urbano', 'Classy 101', 'Feid'),
+  ('urbano', 'Una Noche en Medellín', 'Cris Mj'),
+  ('urbano', 'La Bebe', 'Yng Lvcas');
 
--- ---------- CUMBIA ----------
+-- ---------- CUMBIA (21) ----------
 insert into songs (genre_id, title, artist) values
   ('cumbia', 'Mi Cucu', 'La Sonora Dinamita'),
   ('cumbia', 'Que Bello', 'La Sonora Dinamita'),
@@ -88,15 +139,20 @@ insert into songs (genre_id, title, artist) values
   ('cumbia', '17 Años', 'Los Ángeles Azules'),
   ('cumbia', 'Nunca Es Suficiente', 'Los Ángeles Azules'),
   ('cumbia', 'El Listón de Tu Pelo', 'Los Ángeles Azules'),
+  ('cumbia', 'Fiebre', 'Los Ángeles Azules'),
   ('cumbia', 'El Meneaito', 'Gaby'),
   ('cumbia', 'La Gota Fría', 'Carlos Vives'),
   ('cumbia', 'La Tierra del Olvido', 'Carlos Vives'),
   ('cumbia', 'Oye Mujer', 'Raymix'),
   ('cumbia', 'Cumbia Sampuesana', 'Alejandro Durán'),
   ('cumbia', 'La Cadenita', 'Los del Barrio'),
-  ('cumbia', 'Sopa de Caracol', 'Bolipium');
+  ('cumbia', 'Sopa de Caracol', 'Bolipium'),
+  ('cumbia', 'Cariñito', 'Rodolfo Aicardi'),
+  ('cumbia', 'Juana la Cubana', 'Fito Olivares'),
+  ('cumbia', 'Los Caminos de la Vida', 'Los Rehenes'),
+  ('cumbia', 'Rey Moreno', 'Panteras');
 
--- ---------- BOLIVIANO ----------
+-- ---------- BOLIVIANO (18) ----------
 insert into songs (genre_id, title, artist) values
   ('boliviano', 'Llorando Se Fue', 'Los Kjarkas'),
   ('boliviano', 'Bolivia', 'Los Kjarkas'),
@@ -104,16 +160,20 @@ insert into songs (genre_id, title, artist) values
   ('boliviano', 'Vivir Junto a Ti', 'Los Kjarkas'),
   ('boliviano', 'Tiempo al Tiempo', 'Los Kjarkas'),
   ('boliviano', 'T''una Papita', 'Los Kjarkas'),
+  ('boliviano', 'Kutaguay', 'Los Kjarkas'),
+  ('boliviano', 'Muñequita', 'Los Kjarkas'),
   ('boliviano', 'El Minero', 'Savia Andina'),
   ('boliviano', 'Amorosa Palomita', 'Savia Andina'),
   ('boliviano', 'A los Bosques', 'Savia Andina'),
   ('boliviano', 'Boquerón', 'Savia Andina'),
   ('boliviano', 'Chirihuayrita', 'Savia Andina'),
+  ('boliviano', 'Verbenita', 'Savia Andina'),
   ('boliviano', 'Viva Mi Patria Bolivia', 'Apolinar Camacho'),
   ('boliviano', 'Cuando Florezca el Chuño', 'Kalamarka'),
+  ('boliviano', 'Ama Ama Amaya', 'Kalamarka'),
   ('boliviano', 'Yo Soy de Bolivia', 'Bonanza');
 
--- ---------- CLASICOS 70s-90s ----------
+-- ---------- CLÁSICOS 70s-90s (30) ----------
 insert into songs (genre_id, title, artist) values
   ('clasicos', 'Dancing Queen', 'ABBA'),
   ('clasicos', 'Stayin'' Alive', 'Bee Gees'),
@@ -132,4 +192,93 @@ insert into songs (genre_id, title, artist) values
   ('clasicos', 'Everybody (Backstreet''s Back)', 'Backstreet Boys'),
   ('clasicos', 'Blue (Da Ba Dee)', 'Eiffel 65'),
   ('clasicos', 'Livin'' la Vida Loca', 'Ricky Martin'),
-  ('clasicos', 'Barbie Girl', 'Aqua');
+  ('clasicos', 'Barbie Girl', 'Aqua'),
+  ('clasicos', 'September', 'Earth, Wind & Fire'),
+  ('clasicos', 'Never Gonna Give You Up', 'Rick Astley'),
+  ('clasicos', 'Take Me Home, Country Roads', 'John Denver'),
+  ('clasicos', 'Sweet Dreams', 'Eurythmics'),
+  ('clasicos', 'Careless Whisper', 'George Michael'),
+  ('clasicos', 'Wake Me Up Before You Go-Go', 'Wham!'),
+  ('clasicos', 'Karma Chameleon', 'Culture Club'),
+  ('clasicos', 'Footloose', 'Kenny Loggins'),
+  ('clasicos', 'Ghostbusters', 'Ray Parker Jr.'),
+  ('clasicos', 'Uptown Girl', 'Billy Joel'),
+  ('clasicos', 'Video Killed the Radio Star', 'The Buggles'),
+  ('clasicos', 'Mambo No. 5', 'Lou Bega');
+
+-- ---------- SALSA (17) ----------
+insert into songs (genre_id, title, artist) values
+  ('salsa', 'La Vida Es un Carnaval', 'Celia Cruz'),
+  ('salsa', 'Quimbara', 'Celia Cruz'),
+  ('salsa', 'El Cantante', 'Héctor Lavoe'),
+  ('salsa', 'Mi Gente', 'Héctor Lavoe'),
+  ('salsa', 'Periódico de Ayer', 'Héctor Lavoe'),
+  ('salsa', 'Cali Pachanguero', 'Grupo Niche'),
+  ('salsa', 'La Rebelión', 'Joe Arroyo'),
+  ('salsa', 'Llorarás', 'Oscar D''León'),
+  ('salsa', 'Un Verano en Nueva York', 'El Gran Combo'),
+  ('salsa', 'Pedro Navaja', 'Rubén Blades'),
+  ('salsa', 'Vivir Mi Vida', 'Marc Anthony'),
+  ('salsa', 'Valió la Pena', 'Marc Anthony'),
+  ('salsa', 'Vivir lo Nuestro', 'Marc Anthony'),
+  ('salsa', 'Que Hay de Malo', 'Jerry Rivera'),
+  ('salsa', 'Idilio', 'Willie Colón'),
+  ('salsa', 'La Cura', 'Frankie Ruiz'),
+  ('salsa', 'El Preso', 'Fruko y sus Tesos');
+
+-- ---------- BALADAS (17) ----------
+insert into songs (genre_id, title, artist) values
+  ('baladas', 'El Triste', 'José José'),
+  ('baladas', 'Almohada', 'José José'),
+  ('baladas', 'Querida', 'Juan Gabriel'),
+  ('baladas', 'Amor Eterno', 'Rocío Dúrcal'),
+  ('baladas', 'La Incondicional', 'Luis Miguel'),
+  ('baladas', 'Ahora Te Puedes Marchar', 'Luis Miguel'),
+  ('baladas', 'Si No Te Hubieras Ido', 'Marco Antonio Solís'),
+  ('baladas', 'Azul', 'Cristian Castro'),
+  ('baladas', 'Amor del Bueno', 'Reyli'),
+  ('baladas', 'Mientes', 'Camila'),
+  ('baladas', 'Entra en Mi Vida', 'Sin Bandera'),
+  ('baladas', 'Historia de Taxi', 'Ricardo Arjona'),
+  ('baladas', 'Y Cómo Es Él', 'José Luis Perales'),
+  ('baladas', 'Eres Tú', 'Mocedades'),
+  ('baladas', 'Sabor a Mí', 'Los Panchos'),
+  ('baladas', 'My Heart Will Go On', 'Celine Dion'),
+  ('baladas', 'Bésame Mucho', 'Lucho Gatica');
+
+-- ---------- ROCK EN ESPAÑOL (16) ----------
+insert into songs (genre_id, title, artist) values
+  ('rock-es', 'De Música Ligera', 'Soda Stereo'),
+  ('rock-es', 'Persiana Americana', 'Soda Stereo'),
+  ('rock-es', 'Entre Dos Tierras', 'Héroes del Silencio'),
+  ('rock-es', 'La Célula Que Explota', 'Caifanes'),
+  ('rock-es', 'Oye Mi Amor', 'Maná'),
+  ('rock-es', 'Rayando el Sol', 'Maná'),
+  ('rock-es', 'Bendita Tu Luz', 'Maná'),
+  ('rock-es', 'A Dios le Pido', 'Juanes'),
+  ('rock-es', 'La Camisa Negra', 'Juanes'),
+  ('rock-es', 'Eres', 'Café Tacvba'),
+  ('rock-es', 'Lamento Boliviano', 'Enanitos Verdes'),
+  ('rock-es', 'El Baile de los Que Sobran', 'Los Prisioneros'),
+  ('rock-es', 'Matador', 'Los Fabulosos Cadillacs'),
+  ('rock-es', 'Labios Rotos', 'Zoé'),
+  ('rock-es', 'Andar Conmigo', 'Julieta Venegas'),
+  ('rock-es', 'Flaca', 'Andrés Calamaro');
+
+-- ---------- ELECTRÓNICA (15) ----------
+insert into songs (genre_id, title, artist) values
+  ('electronica', 'Wake Me Up', 'Avicii'),
+  ('electronica', 'Levels', 'Avicii'),
+  ('electronica', 'The Nights', 'Avicii'),
+  ('electronica', 'Titanium', 'David Guetta'),
+  ('electronica', 'Summer', 'Calvin Harris'),
+  ('electronica', 'Faded', 'Alan Walker'),
+  ('electronica', 'Alone', 'Marshmello'),
+  ('electronica', 'Don''t You Worry Child', 'Swedish House Mafia'),
+  ('electronica', 'Get Lucky', 'Daft Punk'),
+  ('electronica', 'Harder Better Faster Stronger', 'Daft Punk'),
+  ('electronica', 'Closer', 'The Chainsmokers'),
+  ('electronica', 'Clarity', 'Zedd'),
+  ('electronica', 'Animals', 'Martin Garrix'),
+  ('electronica', 'Firestone', 'Kygo'),
+  ('electronica', 'Sandstorm', 'Darude');

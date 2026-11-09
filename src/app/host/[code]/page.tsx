@@ -115,7 +115,13 @@ function HostInner() {
     <Shell>
       <Ambient />
       {room.status === "lobby" && (
-        <HostLobby room={room} players={players} onStart={() => run("start")} onSettings={(s) => run("settings", { listenSeconds: s })} busy={busy} />
+        <HostLobby
+          room={room}
+          players={players}
+          onStart={() => run("start")}
+          onSettings={(patch) => run("settings", patch)}
+          busy={busy}
+        />
       )}
       {room.status === "playing" && (
         <HostGame room={room} players={players} guesses={guesses} secret={secret} />

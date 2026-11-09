@@ -24,6 +24,7 @@ create table if not exists songs (
   created_at  timestamptz not null default now()
 );
 create index if not exists songs_genre_idx on songs(genre_id);
+create unique index if not exists songs_genre_title_idx on songs (genre_id, title);
 
 -- ---------- salas ----------
 create table if not exists rooms (
@@ -39,6 +40,7 @@ create table if not exists rooms (
   spin_started_at  timestamptz,
   guess_deadline   timestamptz,
   pending_markers  jsonb not null default '[]',
+  played_songs     jsonb not null default '[]',
   winner_id        uuid,
   settings         jsonb not null default '{}',
   host_secret      text not null,

@@ -4,7 +4,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { GENRES } from "@/lib/game/config";
+import { ALL_GENRES } from "@/lib/game/config";
 import { standings } from "@/lib/game/turns";
 import type { PlayerRow, RoomRow } from "@/lib/game/types";
 
@@ -29,7 +29,7 @@ export function HostWinner({ room, players, onRematch, busy }: HostWinnerProps) 
   const board = standings(players);
 
   const particles = useMemo<Particle[]>(() => {
-    const colors = GENRES.map((g) => g.color);
+    const colors = ALL_GENRES.map((g) => g.color);
     return Array.from({ length: 90 }, (_, i) => ({
       left: (i * 61) % 100,
       delay: (i * 137) % 2200,

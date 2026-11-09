@@ -82,7 +82,23 @@ function wordMatches(titleWord: string, guessWord: string): boolean {
 
 // title y guess crudos (con acentos, mayúsculas, etc.). Devuelve true si cuenta como acierto.
 export function isGuessCorrect(rawTitle: string, rawGuess: string): boolean {
-  const title = normalize(rawTitle);
+  return matchesAny(rawTitle, rawGuess);
+}
+
+// Valida según el modo elegido por el host: título, artista o ambos.
+export function isGuessCorrectByMode(
+  rawTitle: string,
+  rawArtist: string,
+  rawGuess: string,
+  mode: "titulo" | "artista" | "ambos",
+): boolean {
+  if (mode === "titulo") return matchesAny(rawTitle, rawGuess);
+  if (mode === "artista") return matchesAny(rawArtist, rawGuess);
+  return matchesAny(rawTitle, rawGuess) || matchesAny(rawArtist, rawGuess);
+}
+
+function matchesAny(rawTarget: string, rawGuess: string): boolean {
+  const title = normalize(rawTarget);
   const guess = normalize(rawGuess);
   if (!title || !guess) return false;
   if (title === guess) return true;

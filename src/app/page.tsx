@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Ambient } from "@/components/Ambient";
-import { GENRES, LISTEN_CHOICES } from "@/lib/game/config";
+import { ALL_GENRES, LISTEN_CHOICES } from "@/lib/game/config";
 import { createRoom, lastRoomCode, rememberRoomCode, saveHostSecret } from "@/lib/game/client";
 
 const CODE_PATTERN = /^[A-Z0-9]{4}$/;
@@ -86,7 +86,7 @@ export default function Landing() {
           <span className="text-outline">BINGO</span>
         </h1>
         <div className="mt-5 flex items-center justify-center gap-1.5">
-          {GENRES.map((g) => (
+          {ALL_GENRES.map((g) => (
             <span key={g.id} className="h-1.5 w-8 rounded-full" style={{ background: g.color }} />
           ))}
         </div>

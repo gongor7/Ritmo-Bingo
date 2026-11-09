@@ -1,6 +1,14 @@
 import { json, fail, makeCode, makeSecret } from "@/lib/game/server";
 import { getAdmin } from "@/lib/supabase/admin";
-import { DEFAULT_LISTEN_SECONDS, LISTEN_CHOICES } from "@/lib/game/config";
+import {
+  DEFAULT_GENRES,
+  DEFAULT_LISTEN_SECONDS,
+  GUESS_MODES,
+  LISTEN_CHOICES,
+  validGenreSelection,
+  type GenreId,
+  type GuessMode,
+} from "@/lib/game/config";
 
 // POST /api/rooms — crea una sala nueva. Devuelve codigo + secreto del host.
 export async function POST(req: Request) {
@@ -9,13 +17,25 @@ export async function POST(req: Request) {
   }
 
   let listenSeconds = DEFAULT_LISTEN_SECONDS;
+  let genres: GenreId[] = DEFAULT_GENRES;
+  let guessMode: GuessMode = "titulo";
   try {
-    const body = (await req.json()) as { listenSeconds?: number };
+    const body = (await req.json()) as {
+      listenSeconds?: number;
+      genres?: string[];
+      guessMode?: string;
+    };
     if (body?.listenSeconds && LISTEN_CHOICES.includes(body.listenSeconds)) {
       listenSeconds = body.listenSeconds;
     }
+    if (body?.genres && validGenreSelection(body.genres)) {
+      genres = body.genres as GenreId[];
+    }
+    if (body?.guessMode && GUESS_MODES.includes(body.guessMode as GuessMode)) {
+      guessMode = body.guessMode as GuessMode;
+    }
   } catch {
-    // sin body: usar por defecto
+    // sin body: valores por defecto
   }
 
   const db = getAdmin();
@@ -26,7 +46,8 @@ export async function POST(req: Request) {
     const { error } = await db.from("rooms").insert({
       code,
       host_secret: secret,
-      settings: { listenSeconds },
+      settings: { listenSeconds, genres, guessMode },
+      played_songs: [],
     });
     if (!error) return json({ code, hostSecret: secret });
     if (error.code !== "23505") return fail(error.message, 500); // 23505: codigo repetido, reintentar

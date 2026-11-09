@@ -189,6 +189,9 @@ function GameView({ code, playerId, room, players, guesses, realtimeReady }: Gam
   const inSpinWindow = room.phase === "listening" && spinEndAt > now;
   const deadline = room.guess_deadline ? new Date(room.guess_deadline).getTime() : 0;
   const listeningOpen = room.phase === "listening" && !inSpinWindow && deadline > now;
+  const guessMode = room.settings?.guessMode ?? "titulo";
+  const guessPlaceholder =
+    guessMode === "artista" ? "¿Quién la canta?" : guessMode === "ambos" ? "¿Canción o artista?" : "¿Qué canción es?";
   const myRoundGuess = guesses.filter((g) => g.round === room.round && g.player_id === playerId).at(-1) ?? null;
   const iAmValidated = (room.pending_markers ?? []).includes(playerId);
   const winner = players.find((p) => p.id === room.winner_id) ?? null;
@@ -364,7 +367,7 @@ function GameView({ code, playerId, room, players, guesses, realtimeReady }: Gam
                           value={guess}
                           onChange={(e) => setGuess(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && void sendGuess()}
-                          placeholder="¿Qué canción es?"
+                          placeholder={guessPlaceholder}
                           className="flex-1 min-w-0 rounded-xl bg-white/5 border border-white/12 px-3.5 py-2.5 text-sm placeholder:text-bone/30 focus:outline-none"
                         />
                         <button
@@ -393,11 +396,15 @@ function GameView({ code, playerId, room, players, guesses, realtimeReady }: Gam
               {/* revelación */}
               {room.phase === "revealing" && (
                 <div className="text-center">
-                  <p className="tag">era</p>
-                  <p className="font-display font-extrabold text-xl leading-tight mt-1">
-                    {room.song_title}
+                  <p className="tag">
+                    {guessMode === "artista" ? "la cantaba" : "era"}
                   </p>
-                  <p className="text-bone/50 text-sm">{room.song_artist}</p>
+                  <p className="font-display font-extrabold text-xl leading-tight mt-1">
+                    {guessMode === "artista" ? room.song_artist : room.song_title}
+                  </p>
+                  <p className="text-bone/50 text-sm">
+                    {guessMode === "artista" ? room.song_title : room.song_artist}
+                  </p>
                   {myRoundGuess && (
                     <p
                       className={`mt-3 rounded-xl py-2 text-sm font-semibold ${

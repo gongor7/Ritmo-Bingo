@@ -1,6 +1,7 @@
 import { json, fail, loadRoomContext, sweepPresence } from "@/lib/game/server";
 import { getAdmin } from "@/lib/supabase/admin";
 import { generateCard } from "@/lib/game/card";
+import { DEFAULT_GENRES, type GenreId } from "@/lib/game/config";
 
 // POST /api/rooms/[code]/join — el jugador entra con un apodo y recibe su cartón.
 export async function POST(req: Request, { params }: { params: Promise<{ code: string }> }) {
@@ -19,6 +20,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ code: s
   if (ctx.room.status === "finished") return fail("Esta partida ya terminó.", 409);
   await sweepPresence(ctx);
 
+  const genres: GenreId[] = ctx.room.settings?.genres ?? DEFAULT_GENRES;
+
   // Apodos únicos: si existe, agrega un número.
   const existing = new Set(ctx.players.map((p) => p.name.toLowerCase()));
   let finalName = name;
@@ -28,7 +31,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ code: s
   }
 
   const seat = ctx.players.reduce((max, p) => Math.max(max, p.seat + 1), 0);
-  const card = generateCard();
+  const card = generateCard(genres);
 
   const db = getAdmin();
   const { data, error } = await db
