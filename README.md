@@ -58,10 +58,21 @@ la tele queda como anfitriona) o cable HDMI.
 Los celulares siguen funcionando igual durante la proyección: la TV solo es el
 espejo de la pantalla del anfitrión.
 
-## Los seis géneros de la ruleta
+## Los diez géneros del catálogo
 
-Rock, Cumbia, Pop, Boliviano, Urbano y Clásicos 70s-90s. La base de canciones
-vive en `supabase/seed.sql`.
+Rock, Cumbia, Pop, Boliviano, Urbano, Clásicos 70s-90s, Salsa, Baladas,
+Rock en Español y Electrónica — **~230 canciones** en total. La base vive en
+`supabase/seed.sql` (proyectos nuevos) o `supabase/update-2026-11.sql`
+(actualización desde la v1).
+
+En el lobby, el anfitrión configura la partida:
+
+- **Géneros en la ruleta (3 a 5)**: al cambiarlos, los cartones se regeneran.
+- **Qué se adivina**: la canción (título), el artista/grupo, o ambos.
+- **Segundos de escucha**: 20, 30 o 45.
+
+Además, cada sala recuerda las canciones ya sonadas: no se repite una hasta
+agotar el repertorio del género elegido.
 
 ## Stack
 
